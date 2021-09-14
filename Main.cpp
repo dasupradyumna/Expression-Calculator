@@ -2,8 +2,8 @@
 #include "Expression.h"
 
 #include <conio.h>      // _getch, _kbhit
-#include <iostream>     // cin, cout
 #include <cstdlib>      // system
+#include <iostream>     // cin, cout
 
 // escape key is 27 from _getch
 // TODO : use windows.h for handling keyboard events

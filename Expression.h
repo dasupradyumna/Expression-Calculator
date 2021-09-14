@@ -1,12 +1,32 @@
 #ifndef __expression_h__
 #define __expression_h__
 
-#include <string>
-#include <string_view>
+#include <string>           // getline, stod, string
+#include <string_view>      // string_view
+#include <unordered_map>
+#include <unordered_set>
 
 class Expression
 {
-  std::string __raw_data {};
+  template<typename T>
+  class vector : public std::vector<T>
+  {
+    using std::vector<T>::vector;
+
+  public:
+    T pop()
+    {
+      T last { this->back() };
+      this->pop_back();
+      return last;
+    }
+  };
+
+  double __value { };
+  static const std::unordered_set<char> __separators;
+  static const std::unordered_map<char, int> __precedence;
+
+  bool __is_valid( const std::string& raw );
 
 public:
   enum class Status
@@ -16,15 +36,22 @@ public:
     Clear,
     Back
   };
-  Status flag {};
+  Status flag { };
 
   static constexpr std::string_view new_line { "    >>> " };
   static constexpr std::string_view invalid { "    !!! Expression entered is invalid.\n\n" };
 
   Expression() = default;
   void get();
-  bool isValid() const;
-  double evaluate();
+  double evaluate() const;
+};
+
+const std::unordered_set<char> __separators { '^', '*', '/', '+', '-', '(', ')' };
+
+const std::unordered_map<char, int> Expression::__precedence {
+    { '^', 3 },
+    { '*', 2 }, { '/', 2 },
+    { '+', 1 }, { '-', 1 }
 };
 
 #endif
