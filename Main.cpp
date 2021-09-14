@@ -13,7 +13,7 @@ enum class ProgramState
   Start,
   EvaluateExpression,
   Exit,
-  Error
+  Help
 };
 
 inline
@@ -36,7 +36,7 @@ ProgramState Start()
   {
     case '1': return ProgramState::EvaluateExpression;
     case '2': return ProgramState::Exit;
-    default: return ProgramState::Error;
+    default: return ProgramState::Start;
   }
 }
 
@@ -56,6 +56,8 @@ ProgramState EvalExp()
       case Expression::Status::Invalid:
         std::cout << Expression::invalid;
         break;
+      case Expression::Status::Help:
+        return ProgramState::Help;
       case Expression::Status::Clear:
         clearScreen();
         std::cout << Display::EvalExp;
@@ -66,11 +68,20 @@ ProgramState EvalExp()
   }
 }
 
+ProgramState Help()
+{
+  flushConioBuffer();
+  int choice { _getch() };
+  if ( choice == 27 )
+    return ProgramState::EvaluateExpression;
+  else
+    return ProgramState::Help;
+}
+
 int main()
 {
   auto state { ProgramState::Start };
   while ( state != ProgramState::Exit )
-  {
     switch ( state )
     {
       case ProgramState::Start:
@@ -83,10 +94,13 @@ int main()
         std::cout << Display::EvalExp;
         state = EvalExp();
         break;
-      case ProgramState::Error:
+      case ProgramState::Help:
+        clearScreen();
+        std::cout << Display::Help;
+        state = Help();
         break;
     }
-  }
 
+  clearScreen();
   return 0;
 }
