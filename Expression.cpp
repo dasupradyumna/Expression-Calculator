@@ -15,26 +15,48 @@ const std::unordered_map<char, int> Expression::__precedence {
     { '(', 0 }
 };
 
-void process( std::string& input )
+bool __process_input( std::string& input )
 {
-  for ( auto& ch : input ) ch = std::tolower( ch );
+  auto is_floating_point = [] ( char ch ) { return isdigit( ch ) || ch == '.'; };
 
-  // TODO : handle spaces between digits as invalid syntax
-  auto new_length { input.length() - std::count( input.begin(), input.end(), ' ' ) };
-  std::remove( input.begin(), input.end(), ' ' );
-  input.resize( new_length );
+  int mod = std::distance( input.begin(), std::find( input.begin(), input.end(), ' ' ) );
+  if ( mod != input.length() )
+  {
+    char pre_ws { 0 };
+    bool is_pre_ws { false };
+    for ( int orig { mod - 1 }; ++orig < input.length(); )
+      if ( input[orig] != ' ' )
+      {
+        if ( is_floating_point( pre_ws ) && is_floating_point( input[orig] ) ) return false;
+
+        is_pre_ws = false;
+        pre_ws = 0;
+        input[mod++] = input[orig];
+      }
+      else if ( input[orig] == ' ' && !is_pre_ws )
+      {
+        pre_ws = input[orig - 1];
+        is_pre_ws = true;
+      }
+
+    input.resize( mod );
+  }
+
+  return true;
 }
 
 void Expression::get()
 {
   std::string raw { };
   std::getline( std::cin, raw, '\n' );
-  process( raw );
-
-  if ( raw == "back" )
+  if ( !__process_input( raw ) )
+    flag = Status::Invalid;
+  else if ( raw == "back" )
     flag = Status::Back;
   else if ( raw == "clear" )
     flag = Status::Clear;
+  else if ( raw == "help" )
+    flag = Status::Help;
   else if ( __is_valid( raw ) )
     flag = Status::Valid;
   else
@@ -46,9 +68,8 @@ double Expression::value() const
   return __value;
 }
 
-double operation( char op, double L, double R )
+double __operation( char op, double L, double R )
 {
-  // TODO : handle division by zero
   switch ( op )
   {
     case '+': return L + R;
@@ -63,7 +84,7 @@ void Expression::__process_stacks( vector<char>& op_stack, vector<double>& num_s
 {
   double R { num_stack.pop() };
   double L { num_stack.pop() };
-  num_stack.push_back( operation( op_stack.pop(), L, R ) );
+  num_stack.push_back( __operation( op_stack.pop(), L, R ) );
 }
 
 bool Expression::__is_valid( const std::string& raw )
@@ -71,7 +92,7 @@ bool Expression::__is_valid( const std::string& raw )
   vector<char> op_stack { };
   vector<double> num_stack { };
 
-  int start_idx { };
+  int start_idx { 0 };
   bool inside_num { false };
   bool dec_point { false };
   int par_count { 0 };
@@ -79,7 +100,7 @@ bool Expression::__is_valid( const std::string& raw )
   // expression cannot begin with an operator
   if ( __operators.find( raw[0] ) != __operators.end() ) return false;
 
-  for ( int i { 0 }; i < raw.length(); ++i )
+  for ( int i { -1 }; ++i < raw.length(); )
   {
     auto current { raw[i] };
     auto next { raw[i + 1] };
@@ -113,7 +134,7 @@ bool Expression::__is_valid( const std::string& raw )
     else if ( current == '(' )
     {
       // opening paranthesis not followed by a digit or another opening paranthesis is invalid syntax
-      if ( !isdigit( next ) && next != '(' ) return false;
+      if ( !isdigit( next ) && next != '.' && next != '(' ) return false;
 
       op_stack.push_back( current );
       ++par_count;
@@ -127,7 +148,7 @@ bool Expression::__is_valid( const std::string& raw )
 
       while ( op_stack.back() != '(' )
         __process_stacks( op_stack, num_stack );
-      
+
       op_stack.pop_back();  // removes the corresponding opening paranthesis 
     }
     else if ( __operators.find( current ) != __operators.end() )
@@ -146,7 +167,7 @@ bool Expression::__is_valid( const std::string& raw )
   }
   if ( par_count > 0 ) return false; // unpaired opening paranthesis is invalid syntax
 
-  if ( op_stack.size() == 1 )
+  while ( op_stack.size() != 0 )
     __process_stacks( op_stack, num_stack );
 
   __value = num_stack.pop();

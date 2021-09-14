@@ -34,6 +34,7 @@ public:
   {
     Valid,
     Invalid,
+    Help,
     Clear,
     Back
   };
