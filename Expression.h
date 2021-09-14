@@ -27,6 +27,7 @@ class Expression
   static const std::unordered_map<char, int> __precedence;
 
   bool __is_valid( const std::string& raw );
+  void __process_stacks( vector<char>& op_stack, vector<double>& num_stack );
 
 public:
   enum class Status
@@ -43,15 +44,7 @@ public:
 
   Expression() = default;
   void get();
-  double evaluate() const;
-};
-
-const std::unordered_set<char> __separators { '^', '*', '/', '+', '-', '(', ')' };
-
-const std::unordered_map<char, int> Expression::__precedence {
-    { '^', 3 },
-    { '*', 2 }, { '/', 2 },
-    { '+', 1 }, { '-', 1 }
+  double value() const;
 };
 
 #endif

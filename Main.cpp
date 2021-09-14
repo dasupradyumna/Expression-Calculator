@@ -51,7 +51,7 @@ ProgramState EvalExp()
     switch ( Input.flag )
     {
       case Expression::Status::Valid:
-        std::cout << "      = " << Input.evaluate() << "\n\n";
+        std::cout << "      = " << Input.value() << "\n\n";
         break;
       case Expression::Status::Invalid:
         std::cout << Expression::invalid;
